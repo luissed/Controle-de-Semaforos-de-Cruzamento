@@ -1,0 +1,50 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity tb_semaforoCarros_Vertical is
+end tb_semaforoCarros_Vertical;
+
+architecture testbench of tb_semaforoCarros_Vertical is
+	signal clk_tb							:	STD_LOGIC;
+	signal reset_tb          			:	STD_LOGIC := '0';
+	signal verde_semaforo_tb			:	STD_LOGIC := '0';
+	signal amarelo_semaforo_tb			:	STD_LOGIC := '0';
+	signal vermelho_semaforo_tb		:	STD_LOGIC := '0';
+	signal verdePedestres_semaforo_tb			: STD_LOGIC	:= '0';
+	signal vermelhoPedestres_semaforo_tb		: STD_LOGIC	:= '0';
+
+	constant CLOCK_PERIOD    : time := 20 ns; -- Ajuste conforme necessário
+	
+	begin 
+  -- Instantiate the Unit Under Test (UUT)
+	uut: entity work.semaforoCarros_Vertical
+		port map (
+			clk               => clk_tb,
+			reset					=> reset_tb,
+			verde_semaforo		=> verde_semaforo_tb,
+			amarelo_semaforo	=> amarelo_semaforo_tb,
+			vermelho_semaforo => vermelho_semaforo_tb,
+			verdePedestres_semaforo => verdePedestres_semaforo_tb,
+			vermelhoPedestres_semaforo => vermelhoPedestres_semaforo_tb
+		);
+	
+  -- Clock Process
+	process
+	begin
+		clk_tb <= '1';
+		wait for CLOCK_PERIOD/2; -- Metade do período
+		clk_tb <= '0';
+		wait for CLOCK_PERIOD/2; -- Metade do período
+	end process;
+	
+	resetar: process
+	begin
+		reset_tb <= '1';
+		wait for CLOCK_PERIOD*2; -- Metade do período
+		reset_tb <= '0';
+		wait for CLOCK_PERIOD*2; -- Metade do período
+		wait;
+	end process resetar;
+	
+	
+end testbench;

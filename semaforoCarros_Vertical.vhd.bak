@@ -1,0 +1,123 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+entity semaforoCarros_Vertical is
+	Port ( 
+		clk									:	in STD_LOGIC;
+		reset									:	in STD_LOGIC	:= '0';
+		verde_semaforo						:	out STD_LOGIC	:= '0';
+		amarelo_semaforo					:	out STD_LOGIC 	:= '0';
+		vermelho_semaforo					:	out STD_LOGIC 	:= '0';
+		verdePedestres_semaforo			:	out STD_LOGIC	:= '0';
+		vermelhoPedestres_semaforo		:	out STD_LOGIC	:= '0'
+	);
+end semaforoCarros_Vertical;
+
+architecture Combined of semaforoCarros_Vertical is
+
+	signal segundos_cronometro_internal	:	INTEGER		:= 0;
+	signal reset_cronometro_internal		:	STD_LOGIC	:= '0';
+	signal green_time_ok_internal			:	STD_LOGIC	:= '0';
+	signal yellow_time_ok_internal		:	STD_LOGIC	:= '0';
+	signal red_time_ok_internal			:	STD_LOGIC	:= '0';
+	signal green_time_pedestres_ok_internal	:	STD_LOGIC	:= '0';
+	signal red_time_pedestres_ok_internal		:	STD_LOGIC	:= '0';
+	signal estadoSemaforoCarros_semaforo_internal		: STD_LOGIC_VECTOR(2 downto 0) := "000";
+	signal estadoSemaforoPedestres_semaforo_internal	: STD_LOGIC_VECTOR(1 downto 0) := "00";
+
+	component cronometro
+		Port ( 
+			clk               :	in STD_LOGIC;
+			reset_cronometro	:	in STD_LOGIC := '0';
+			segundos          :	out INTEGER := 0
+		);
+	end component;
+
+	component comparador
+		Port ( 
+			clk               :	in STD_LOGIC;
+			reset_cronometro	:	in STD_LOGIC := '0';
+			segundos          :	in INTEGER := 0;
+			green_time_ok     :	out STD_LOGIC := '0';
+			yellow_time_ok    :	out STD_LOGIC := '0';
+			red_time_ok       :	out STD_LOGIC := '0';
+			green_time_pedestres_ok	: out STD_LOGIC := '0';
+			red_time_pedestres_ok	: out STD_LOGIC := '0'
+		);
+  end component;
+  
+	component semaforoCarros
+		Port ( 
+			clk									:	in STD_LOGIC;	-- Sinal de entrada de clock
+			reset									:	in STD_LOGIC := '0';	-- Sinal de entrada de reset
+			green_time_ok						:	in STD_LOGIC := '0';	-- sinal de entrada se o tempo da luz verde atingiu o limite
+			yellow_time_ok						:	in STD_LOGIC := '0';	-- sinal de entrada se o tempo da luz amarela atingiu o limite
+			red_time_ok							:	in STD_LOGIC := '0';	-- sinal de entrada se o tempo da luz vermelha atingiu o limite
+			verde_semaforo						:	out STD_LOGIC := '0';	-- Sinal de saída da luz verde
+			amarelo_semaforo					:	out STD_LOGIC := '0';	-- Sinal de saída da luz amarela
+			vermelho_semaforo					:	out STD_LOGIC := '0';	-- Sinal de saída da luz vermelha
+			reset_cronometro					:	out STD_LOGIC := '0';
+			estadoSemaforoCarros_semaforo :	out STD_LOGIC_VECTOR(2 downto 0) := "000"	-- Sinal de saída do estado do semáforo (vermelho, amarelo, verde)
+		);
+	end component;
+	
+	component semaforoPedestres
+		Port (
+			clk										: in STD_LOGIC;	-- Sinal de entrada de clock
+			reset										: in STD_LOGIC;	-- Sinal de entrada de reset
+			green_time_pedestres_ok				: in STD_LOGIC;
+			red_time_pedestres_ok				: in STD_LOGIC;	-- Sinal de saída da luz verde
+			verdePedestres_semaforo				: out STD_LOGIC;
+			vermelhoPedestres_semaforo			: out STD_LOGIC;	-- Sinal de saída da luz vermelha
+			estadoSemaforoPedestres_semaforo : out STD_LOGIC_VECTOR(1 downto 0) := "00"	-- Sinal de saída do estado do semáforo (vermelho, verde)
+		);
+	end component;
+
+begin
+	cronometro_inst : cronometro
+		port map (
+			clk               => clk,
+			reset_cronometro  => reset_cronometro_internal,
+			segundos          => segundos_cronometro_internal
+		);
+
+	comparador_inst : comparador
+		port map (
+			clk               => clk,
+			reset_cronometro  => reset_cronometro_internal,
+			segundos          => segundos_cronometro_internal,
+			green_time_ok     => green_time_ok_internal,
+			yellow_time_ok    => yellow_time_ok_internal,
+			red_time_ok       => red_time_ok_internal,
+			green_time_pedestres_ok => green_time_pedestres_ok_internal,
+			red_time_pedestres_ok => red_time_pedestres_ok_internal
+		);
+		
+	semaforoCarros_inst : semaforoCarros
+		port map (
+			clk               => clk,
+			reset  => reset,
+			green_time_ok     => green_time_ok_internal,
+			yellow_time_ok    => yellow_time_ok_internal,
+			red_time_ok       => red_time_ok_internal,
+			verde_semaforo		=> verde_semaforo,
+			amarelo_semaforo	=>	amarelo_semaforo,
+			vermelho_semaforo	=> vermelho_semaforo,
+			reset_cronometro	=> reset_cronometro_internal,
+			estadoSemaforoCarros_semaforo => estadoSemaforoCarros_semaforo_internal
+		);
+		
+	semaforoPedestres_inst : semaforoPedestres
+		port map (
+			clk => clk,
+			reset => reset,
+			green_time_pedestres_ok => green_time_pedestres_ok_internal,
+			red_time_pedestres_ok => red_time_pedestres_ok_internal,
+			verdePedestres_semaforo => verdePedestres_semaforo,
+			vermelhoPedestres_semaforo => vermelhoPedestres_semaforo,
+			estadoSemaforoPedestres_semaforo => estadoSemaforoPedestres_semaforo_internal
+		);
+
+end Combined;
